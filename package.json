@@ -1,0 +1,63 @@
+{
+  "name": "neuralcartographer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NeuralCartographer — infinite, deterministic world generation from planet to pebble.",
+  "license": "MIT",
+  "homepage": "https://github.com/shivang-jindal/NeuralCartographer#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shivang-jindal/NeuralCartographer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shivang-jindal/NeuralCartographer/issues"
+  },
+  "keywords": [
+    "world-generation",
+    "procedural",
+    "deterministic",
+    "cartography",
+    "react",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=20.11"
+  },
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @neuralcartographer/shared",
+    "build:server": "npm run build -w @neuralcartographer/server",
+    "build:client": "npm run build -w @neuralcartographer/client",
+    "build": "npm run build:shared && npm run build:server && npm run build:client",
+    "typecheck": "npm run build:shared && npm run typecheck -w @neuralcartographer/server && npm run typecheck -w @neuralcartographer/client",
+    "lint": "eslint .",
+    "test": "npm run build:shared && vitest run",
+    "test:watch": "vitest",
+    "dev:server": "npm run dev -w @neuralcartographer/server",
+    "dev:client": "npm run dev -w @neuralcartographer/client",
+    "dev": "node scripts/dev.mjs",
+    "start": "npm run start -w @neuralcartographer/server",
+    "smoke": "node scripts/smoke.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.10.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.19.1",
+    "vite": "^6.0.7",
+    "vitest": "^3.0.0"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
+  }
+}
