@@ -391,6 +391,7 @@ export const NAV_ITEMS = [
   { to: '/', label: 'Overview', icon: 'overview' },
   { to: '/catalog', label: 'Worlds', icon: 'catalog' },
   { to: '/simulator', label: 'Simulator', icon: 'simulator' },
+  { to: '/workspaces', label: 'World projects', icon: 'projects' },
   { to: '/assistant', label: 'Architect', icon: 'assistant' },
   { to: '/settings', label: 'Settings', icon: 'settings' }
 ] as const;

@@ -25,6 +25,16 @@ The repository is a complete open-source product:
 - **Shared** — one Zod schema and constant catalogue for runtime and types
 - **Engine** — pure functions, no database required, fully reproducible
 
+### World projects
+
+Create named world projects with a reproducible scenario seed and design notes, select a
+project seed in the simulator, and save scenario reports under that project.
+The server stores these records in `.data/workspaces.json` (override with
+`WORKSPACE_FILE`). This is a single-installation workspace file, not a multi-user
+account or cloud sync service. Back it up with the rest of the server data.
+Simulation outputs are deterministic model results for exploration, not
+observations of real planets.
+
 ---
 
 ## Features

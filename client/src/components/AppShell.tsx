@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Command,
   FlaskConical,
+  FolderKanban,
   Github,
   Globe2,
   LayoutDashboard,
@@ -28,6 +29,7 @@ const ICONS = {
   overview: LayoutDashboard,
   catalog: Globe2,
   simulator: FlaskConical,
+  projects: FolderKanban,
   assistant: Sparkles,
   settings: SettingsIcon
 } as const;
@@ -36,6 +38,7 @@ const PATH_TITLES: Record<string, string> = {
   '/': 'Overview',
   '/catalog': 'World catalogue',
   '/simulator': 'Simulation lab',
+  '/workspaces': 'World projects',
   '/assistant': 'World architect',
   '/settings': 'Workspace settings'
 };
@@ -160,7 +163,7 @@ export function AppShell() {
               <p className="mt-2 font-mono text-[11px] text-ink-muted">
                 {version.data ? `${version.data.name} v${version.data.version}` : 'waiting for api…'}
               </p>
-              <p className="mt-0.5 font-mono text-[10px] text-ink-faint">deterministic · no database</p>
+              <p className="mt-0.5 font-mono text-[10px] text-ink-faint">deterministic · saved on this server</p>
             </div>
           </div>
         ) : null}

@@ -102,6 +102,17 @@ describe('simulation API', () => {
     const response = await request(app).post('/api/v1/simulate').send({ ...body, intensity: 3 }).expect(400);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('persists reproducible world projects and their scenario reports', async () => {
+    const created = await request(app).post('/api/v1/workspaces').send({ name: 'Delta archive', seed: 'delta-42', notes: 'Compare a warm coastal world.' }).expect(201);
+    const projectId = created.body.project.id as string;
+    const saved = await request(app).post(`/api/v1/workspaces/${projectId}/runs`).send({ ...body, seed: 'delta-42' }).expect(201);
+    expect(saved.body.project.runs).toHaveLength(1);
+    expect(saved.body.result.seed).toBe('delta-42');
+    const listed = await request(app).get('/api/v1/workspaces').expect(200);
+    expect(listed.body.projects.find((item: { id: string }) => item.id === projectId).runs[0].result.seed).toBe('delta-42');
+    await request(app).delete(`/api/v1/workspaces/${projectId}`).expect(204);
+  });
 });
 
 describe('assistant API', () => {
