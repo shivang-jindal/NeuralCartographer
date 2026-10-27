@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Command,
   FlaskConical,
+  WandSparkles,
   FolderKanban,
   Github,
   Globe2,
@@ -29,6 +30,7 @@ const ICONS = {
   overview: LayoutDashboard,
   catalog: Globe2,
   simulator: FlaskConical,
+  generator: WandSparkles,
   projects: FolderKanban,
   assistant: Sparkles,
   settings: SettingsIcon
@@ -37,6 +39,7 @@ const ICONS = {
 const PATH_TITLES: Record<string, string> = {
   '/': 'Overview',
   '/catalog': 'World catalogue',
+  '/generator': 'Procedural world generator',
   '/simulator': 'Simulation lab',
   '/workspaces': 'World projects',
   '/assistant': 'World architect',

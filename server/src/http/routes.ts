@@ -6,11 +6,13 @@ import {
   catalogQuerySchema,
   shareLinkSchema,
   simulationRequestSchema,
+  worldGenerationRequestSchema,
   type CatalogQuery
 } from '@neuralcartographer/shared';
 
 import { asyncHandler, validateBody, validateQuery } from './middleware.js';
 import { workspaceStore } from '../store/workspaceStore.js';
+import { generateWorld } from '../domain/world-generator.js';
 import {
   analyticsSummary,
   capabilities,
@@ -51,6 +53,18 @@ apiRouter.get('/v1/catalog/:id', (req, res, next) => {
 apiRouter.get('/v1/analytics/summary', (_req, res) => {
   res.json(analyticsSummary());
 });
+
+const worldGenerationInput = worldGenerationRequestSchema.extend({ projectId: z.string().uuid().optional() });
+apiRouter.post('/v1/worlds/generate', validateBody(worldGenerationInput), asyncHandler(async (req, res) => {
+  const { projectId, ...request } = req.body;
+  const world = generateWorld(request);
+  if (!projectId) {
+    res.status(201).json({ world, saved: false });
+    return;
+  }
+  const project = await workspaceStore.addRun(projectId, `Generated world: ${world.name}`, world);
+  res.status(201).json({ world, project, saved: true });
+}));
 
 const projectInput = z.object({
   name: z.string().trim().min(1).max(100),

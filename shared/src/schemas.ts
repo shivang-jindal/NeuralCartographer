@@ -43,6 +43,33 @@ export const simulationRequestSchema = z.object({
   horizonHours: z.number().int().min(1).max(72).default(24)
 });
 
+export const worldGenerationRequestSchema = z.object({
+  seed: z.string().trim().min(1).max(120),
+  width: z.number().int().min(12).max(48).default(24),
+  height: z.number().int().min(8).max(24).default(12)
+});
+
+export const generatedWorldSchema = z.object({
+  seed: z.string(),
+  hash: z.string(),
+  name: z.string(),
+  width: z.number().int(),
+  height: z.number().int(),
+  landPercent: z.number().min(0).max(100),
+  biomeCounts: z.record(z.number().int().nonnegative()),
+  cells: z.array(z.object({
+    id: z.string(),
+    x: z.number().int(),
+    y: z.number().int(),
+    lon: z.number(),
+    lat: z.number(),
+    elevationM: z.number(),
+    temperatureC: z.number(),
+    rainfallMm: z.number().nonnegative(),
+    biome: z.string()
+  }))
+});
+
 export const simulationResultSchema = z.object({
   id: z.string().uuid(),
   action: z.string(),
@@ -119,6 +146,8 @@ export const analyticsSummarySchema = z.object({
 export type CatalogQuery = z.infer<typeof catalogQuerySchema>;
 export type EntityDetail = z.infer<typeof entityDetailSchema>;
 export type SimulationRequest = z.infer<typeof simulationRequestSchema>;
+export type WorldGenerationRequest = z.infer<typeof worldGenerationRequestSchema>;
+export type GeneratedWorld = z.infer<typeof generatedWorldSchema>;
 export type SimulationResult = z.infer<typeof simulationResultSchema>;
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 export type ChatResponse = z.infer<typeof chatResponseSchema>;

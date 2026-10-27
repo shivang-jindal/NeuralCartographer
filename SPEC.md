@@ -1,5 +1,7 @@
 # 🧠 NEURAL CARTOGRAPHER — The Infinite AI World Generator
 
+> **Implementation status:** This is an aspirational vision document, not a statement of implemented capability. The shipped generator creates a deterministic, fictional 32 × 16 biome sketch from a seed and simple latitude/rainfall/elevation rules. It is not an AI system, infinite renderer, physical planet model, or real-world geospatial data source.
+
 > **An infinite, deterministic, photorealistic world generator. Zoom from planet → continent → city → building → room → object. Every detail consistent, every seed a universe. Not a map — a universe generator.**
 
 ---

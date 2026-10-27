@@ -1,6 +1,6 @@
 # NeuralCartographer
 
-> **Infinite, deterministic world generation — from planet to pebble.**
+> **Seeded procedural world sketches for game, story, and design prototyping.**
 
 [![CI](https://github.com/shivang-jindal/NeuralCartographer/actions/workflows/ci.yml/badge.svg)](https://github.com/shivang-jindal/NeuralCartographer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -36,6 +36,12 @@ Simulation outputs are deterministic model results for exploration, not
 observations of real planets.
 
 ---
+
+## Current implementation and limits
+
+The World Generator creates a deterministic 32 × 16 fictional grid using a seeded rule-based process with broad latitude, rainfall, and elevation parameters. Generated values are design artifacts; they are not sourced from Earth observations or calibrated to planetary science. The seeded catalogue and other simulations are illustrative. The generator is not an AI model, an infinite-resolution renderer, or a physical climate, hydrology, or tectonic simulator. Projects can retain generated JSON outputs and notes on the local server installation.
+
+Some sections below describe the original product vision and aspirational capabilities. They are not a claim that those functions are implemented. See [SPEC.md](SPEC.md) for the vision and this section for present behavior.
 
 ## Features
 

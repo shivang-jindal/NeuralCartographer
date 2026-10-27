@@ -1,0 +1,74 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Download, FolderOpen, Sparkles } from 'lucide-react';
+
+import type { GeneratedWorld } from '@neuralcartographer/shared';
+import { ErrorNote, Panel, SectionHeading, Spinner } from '../components/ui';
+import { useToast } from '../components/Toast';
+import { apiGet, apiPost } from '../lib/api';
+import { downloadJson } from '../lib/format';
+
+type Project = { id: string; name: string; seed: string };
+type GenerationResponse = { world: GeneratedWorld; saved: boolean };
+
+const BIOME_COLORS: Record<string, string> = {
+  ocean: '#123b69', polar_ice: '#d9eff4', tundra: '#8ebbc0', desert: '#cf9659',
+  grassland: '#a2ae59', temperate_forest: '#397b5f', rainforest: '#185743', alpine: '#8a969d'
+};
+
+export function GeneratorPage() {
+  const [seed, setSeed] = useState('emerald-drift');
+  const [projectId, setProjectId] = useState('');
+  const [world, setWorld] = useState<GeneratedWorld | null>(null);
+  const { addToast } = useToast();
+  const projects = useQuery({ queryKey: ['workspaces'], queryFn: () => apiGet<{ projects: Project[] }>('/workspaces') });
+  const selected = projects.data?.projects.find((project) => project.id === projectId);
+
+  useEffect(() => { if (selected) setSeed(selected.seed); }, [selected?.id, selected?.seed]);
+
+  const generate = useMutation({
+    mutationFn: () => apiPost<GenerationResponse>('/worlds/generate', {
+      seed, width: 32, height: 16, ...(projectId ? { projectId } : {})
+    }),
+    onSuccess: ({ world: generated, saved }) => {
+      setWorld(generated);
+      addToast({ type: 'success', title: saved ? 'World generated and saved' : 'World generated', message: generated.name });
+      if (saved) void projects.refetch();
+    },
+    onError: (error: Error) => addToast({ type: 'error', title: 'Generation failed', message: error.message })
+  });
+
+  const biomeRows = useMemo(() => world ? Object.entries(world.biomeCounts).filter(([, count]) => count > 0).sort((a, b) => b[1] - a[1]) : [], [world]);
+
+  return <div className="space-y-5">
+    <SectionHeading eyebrow="Procedural cartography" title="Generate a coherent fictional world" description="A deterministic terrain and biome sketch from your seed. Identical seed and grid settings recreate the same cells. The climate and elevation values are design parameters, not physical forecasts." actions={<Link className="btn text-xs" to="/workspaces">World projects <FolderOpen className="h-3.5 w-3.5" /></Link>} />
+    <Panel title="World parameters" description="The current generator produces a 32 × 16 global design grid with broad landforms and biome bands.">
+      <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+        <label className="label">Seed<input className="input mt-1 font-mono" maxLength={120} value={seed} onChange={(event) => setSeed(event.target.value)} /></label>
+        <label className="label">Save under project<select className="select mt-1" value={projectId} onChange={(event) => setProjectId(event.target.value)}><option value="">Preview only</option>{projects.data?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>
+        <button type="button" className="btn btn-primary" disabled={!seed.trim() || generate.isPending} onClick={() => generate.mutate()}><Sparkles className="h-4 w-4" />{generate.isPending ? 'Generating…' : projectId ? 'Generate & save' : 'Generate preview'}</button>
+      </div>
+      {projects.isPending ? <div className="mt-3"><Spinner label="Loading projects…" /></div> : null}
+      {projects.isError ? <ErrorNote message={(projects.error as Error).message} onRetry={() => void projects.refetch()} /> : null}
+    </Panel>
+
+    {generate.isError ? <ErrorNote message={(generate.error as Error).message} onRetry={() => generate.mutate()} /> : null}
+    {world ? <>
+      <Panel title={world.name} description={`Seed ${world.seed} · ${world.hash} · ${world.width} × ${world.height} fictional cells`} actions={<button type="button" className="btn text-xs" onClick={() => downloadJson(`${world.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.json`, world)}><Download className="h-3.5 w-3.5" />Export world JSON</button>}>
+        <div className="grid gap-5 xl:grid-cols-[1.5fr_0.5fr]">
+          <div className="overflow-hidden rounded-xl border border-line bg-[#07131b] p-2 sm:p-3">
+            <div role="img" aria-label={`Generated fictional world ${world.name}; colored global grid of biomes`} className="grid aspect-[2/1] gap-[2px] overflow-hidden rounded-lg" style={{ gridTemplateColumns: `repeat(${world.width}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${world.height}, minmax(0, 1fr))` }}>
+              {world.cells.map((cell) => <div key={cell.id} title={`${cell.biome.replaceAll('_', ' ')} · ${cell.elevationM.toLocaleString()} m · ${cell.temperatureC} °C`} style={{ backgroundColor: BIOME_COLORS[cell.biome] ?? '#555' }} />)}
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-line bg-surface-sunken/50 p-3"><p className="text-xs text-ink-muted">Grid land coverage</p><p className="mt-1 font-mono text-2xl text-ink">{world.landPercent}%</p><p className="text-[10px] text-ink-faint">Share of generated cells classified as land</p></div>
+            <div className="space-y-1.5">{biomeRows.map(([biome, count]) => <div key={biome} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-sunken/40 px-2.5 py-2"><span className="flex items-center gap-2 text-xs capitalize text-ink-muted"><i className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: BIOME_COLORS[biome] }} />{biome.replaceAll('_', ' ')}</span><span className="font-mono text-xs text-ink">{count}</span></div>)}</div>
+          </div>
+        </div>
+      </Panel>
+      <Panel title="Interpretation" description="A generated design artifact, not a planetary science product."><p className="text-sm leading-relaxed text-ink-muted">The generator uses a seeded pseudo-random process and broad latitude, rainfall, and elevation rules to create an internally repeatable map sketch. It does not use real elevation, climate, hydrology, tectonics, or imagery data; its numeric values are fictional parameters intended for worldbuilding and game or story prototyping.</p></Panel>
+    </> : <Panel><p className="py-8 text-center text-sm text-ink-muted">Choose a seed and generate a world. Save it to a project to retain the output with your design notes.</p></Panel>}
+  </div>;
+}
