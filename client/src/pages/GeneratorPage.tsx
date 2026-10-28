@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Dice5, Download, FolderOpen, Sparkles } from 'lucide-react';
+import { Dice5, Download, FolderOpen, Sparkles, Thermometer } from 'lucide-react';
 
 import type { GeneratedWorld } from '@neuralcartographer/shared';
 import { ErrorNote, Panel, SectionHeading, Spinner } from '../components/ui';
@@ -11,6 +11,7 @@ import { downloadJson } from '../lib/format';
 
 type Project = { id: string; name: string; seed: string };
 type GenerationResponse = { world: GeneratedWorld; saved: boolean };
+type EarthClimate = { coordinates: { latitude: number; longitude: number }; months: Array<{ month: string; temperatureC: number | null; precipitationMmPerDay: number | null }>; source: { name: string; url: string; docs: string; resolution: string }; fetchedAt: string; note: string };
 
 const BIOME_COLORS: Record<string, string> = {
   ocean: '#123b69', polar_ice: '#d9eff4', tundra: '#8ebbc0', desert: '#cf9659',
@@ -24,9 +25,11 @@ export function GeneratorPage() {
   const [selectedCellId, setSelectedCellId] = useState('');
   const [projectId, setProjectId] = useState('');
   const [world, setWorld] = useState<GeneratedWorld | null>(null);
+  const [referencePoint, setReferencePoint] = useState({ latitude: '37.77', longitude: '-122.42' });
   const { addToast } = useToast();
   const projects = useQuery({ queryKey: ['workspaces'], queryFn: () => apiGet<{ projects: Project[] }>('/workspaces') });
   const selected = projects.data?.projects.find((project) => project.id === projectId);
+  const climate = useMutation({ mutationFn: () => apiGet<EarthClimate>(`/worlds/earth-climate?latitude=${encodeURIComponent(referencePoint.latitude)}&longitude=${encodeURIComponent(referencePoint.longitude)}`) });
 
   useEffect(() => { if (selected) setSeed(selected.seed); }, [selected?.id, selected?.seed]);
 
@@ -58,6 +61,16 @@ export function GeneratorPage() {
       </div>
       {projects.isPending ? <div className="mt-3"><Spinner label="Loading projects…" /></div> : null}
       {projects.isError ? <ErrorNote message={(projects.error as Error).message} onRetry={() => void projects.refetch()} /> : null}
+    </Panel>
+
+    <Panel title="Earth climate reference" description="Compare a real Earth location with your fictional world. NASA climatology stays separate from generated cell values." actions={<Thermometer className="h-4 w-4 text-emerald-200" />}>
+      <form className="flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); climate.mutate(); }}>
+        <label className="label">Latitude<input className="input mt-1 w-32" type="number" min="-90" max="90" step="any" required value={referencePoint.latitude} onChange={(event) => setReferencePoint((point) => ({ ...point, latitude: event.target.value }))} /></label>
+        <label className="label">Longitude<input className="input mt-1 w-32" type="number" min="-180" max="180" step="any" required value={referencePoint.longitude} onChange={(event) => setReferencePoint((point) => ({ ...point, longitude: event.target.value }))} /></label>
+        <button className="btn btn-primary" disabled={climate.isPending}>{climate.isPending ? 'Loading NASA data…' : 'Load Earth reference'}</button>
+      </form>
+      {climate.isError ? <ErrorNote message={(climate.error as Error).message} onRetry={() => climate.mutate()} /> : null}
+      {climate.data ? <><div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">{climate.data.months.map((month) => <div key={month.month} className="rounded-lg border border-line bg-surface-sunken/40 p-2"><p className="text-[10px] uppercase text-ink-faint">{month.month}</p><p className="mt-1 font-mono text-sm">{month.temperatureC === null ? '—' : `${month.temperatureC.toFixed(1)}°`}</p><p className="font-mono text-[10px] text-cyan-100">{month.precipitationMmPerDay === null ? '—' : `${month.precipitationMmPerDay.toFixed(1)} mm/d`}</p></div>)}</div><p className="mt-3 text-[10px] text-ink-faint">{climate.data.note} · Fetched {new Date(climate.data.fetchedAt).toLocaleString()} · <a className="underline" href={climate.data.source.docs} target="_blank" rel="noreferrer">NASA POWER source and methodology</a></p></> : null}
     </Panel>
 
     {generate.isError ? <ErrorNote message={(generate.error as Error).message} onRetry={() => generate.mutate()} /> : null}

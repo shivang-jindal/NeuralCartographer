@@ -13,6 +13,7 @@ import {
 import { asyncHandler, validateBody, validateQuery } from './middleware.js';
 import { workspaceStore } from '../store/workspaceStore.js';
 import { generateWorld } from '../domain/world-generator.js';
+import { fetchEarthClimate } from '../providers/nasaPower.js';
 import {
   analyticsSummary,
   capabilities,
@@ -53,6 +54,12 @@ apiRouter.get('/v1/catalog/:id', (req, res, next) => {
 apiRouter.get('/v1/analytics/summary', (_req, res) => {
   res.json(analyticsSummary());
 });
+
+apiRouter.get('/v1/worlds/earth-climate', asyncHandler(async (req, res) => {
+  const point = z.object({ latitude: z.coerce.number().min(-90).max(90), longitude: z.coerce.number().min(-180).max(180) }).safeParse(req.query);
+  if (!point.success) { res.status(400).json({ error: { code: 'INVALID_COORDINATES', message: 'Provide latitude (-90 to 90) and longitude (-180 to 180).' } }); return; }
+  res.json(await fetchEarthClimate(point.data));
+}));
 
 const worldGenerationInput = worldGenerationRequestSchema.extend({ projectId: z.string().uuid().optional() });
 apiRouter.post('/v1/worlds/generate', validateBody(worldGenerationInput), asyncHandler(async (req, res) => {
